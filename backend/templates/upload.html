@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Parser and Generator</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        #result { margin-top: 20px; }
+        #downloadLink { display: none; margin-top: 20px; }
+        #error { display: none; color: red; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Resume Parser and Generator</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" name="file" accept=".pdf">
+        <input type="submit" value="Upload and Generate">
+    </form>
+    <div id="result"></div>
+    <div id="downloadLink"></div>
+    <div id="error"></div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            var formData = new FormData(this);
+            fetch('/', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('error').style.display = 'block';
+                    document.getElementById('error').textContent = data.error;
+                    document.getElementById('downloadLink').style.display = 'none';
+                } else {
+                    document.getElementById('result').textContent = data.message;
+                    var downloadLink = document.getElementById('downloadLink');
+                    downloadLink.style.display = 'block';
+                    downloadLink.innerHTML = '<a href="' + data.download_link + '">Download Generated Resume</a>';
+                    document.getElementById('error').style.display = 'none';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').textContent = 'An error occurred. Please try again.';
+                document.getElementById('downloadLink').style.display = 'none';
+            });
+        });
+    </script>
+</body>
+</html>

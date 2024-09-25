@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: flask-backend
+    env: python
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: gunicorn backend.app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.0
+    disk:
+      name: data
+      mountPath: /data
+      sizeGB: 1
+
+  - type: pserv
+    name: file-storage
+    env: docker
+    disk:
+      name: data
+      mountPath: /data
+      sizeGB: 1
+
+  - type: web
+    name: react-frontend
+    env: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: REACT_APP_API_URL
+        fromService:
+          type: web
+          name: flask-backend
+          envVarKey: RENDER_EXTERNAL_URL

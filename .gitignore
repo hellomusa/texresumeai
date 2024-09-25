@@ -1,0 +1,55 @@
+# Byte-compiled Python files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Environment variables
+.env
+*.env
+
+# Virtual environment folders
+venv/
+env/
+.venv/
+ENV/
+
+# Flask-related cache and logs
+instance/
+*.log
+*.sqlite3
+*.db
+
+# Compiled C extensions
+*.so
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Build directories
+build/
+dist/
+
+# Cache directories
+.cache/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# IDEs and editors
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Git ignores itself
+.git

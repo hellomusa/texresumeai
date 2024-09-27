@@ -1,0 +1,201 @@
+%-------------------------
+% Resume in Latex
+% Author : Jake Gutierrez
+% Based off of: https://github.com/sb2nov/resume
+% License : MIT
+%------------------------
+
+\documentclass[letterpaper,11pt]{article}
+
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage[english]{babel}
+\usepackage{tabularx}
+\input{glyphtounicode}
+
+
+%----------FONT OPTIONS----------
+% sans-serif
+% \usepackage[sfdefault]{FiraSans}
+% \usepackage[sfdefault]{roboto}
+% \usepackage[sfdefault]{noto-sans}
+% \usepackage[default]{sourcesanspro}
+
+% serif
+% \usepackage{CormorantGaramond}
+% \usepackage{charter}
+
+
+\pagestyle{fancy}
+\fancyhf{} % clear all header and footer fields
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% Adjust margins
+\addtolength{\oddsidemargin}{-0.5in}
+\addtolength{\evensidemargin}{-0.5in}
+\addtolength{\textwidth}{1in}
+\addtolength{\topmargin}{-.5in}
+\addtolength{\textheight}{1.0in}
+
+\urlstyle{same}
+
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+% Sections formatting
+\titleformat{\section}{
+  \vspace{-4pt}\scshape\raggedright\large
+}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
+
+% Ensure that generate pdf is machine readable/ATS parsable
+\pdfgentounicode=1
+
+%-------------------------
+% Custom commands
+\newcommand{\resumeItem}[1]{
+  \item\small{
+    {#1 \vspace{-2pt}}
+  }
+}
+
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-2pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & #2 \\
+      \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeSubSubheading}[2]{
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \textit{\small#1} & \textit{\small #2} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeProjectHeading}[2]{
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \small#1 & #2 \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeSubItem}[1]{\resumeItem{#1}\vspace{-4pt}}
+
+\renewcommand\labelitemii{$\vcenter{\hbox{\tiny$\bullet$}}$}
+
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.15in, label={}]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
+
+%-------------------------------------------
+%%%%%%  RESUME STARTS HERE  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\begin{document}
+
+%----------HEADING----------
+\begin{center}
+    \textbf{\Huge \scshape {{full_name}}} \\ \vspace{1pt}
+    \small {{phone}} $|$ \href{mailto:{{email}}}{\underline{{{email}}}} $|$ 
+    \href{{{linkedin_url}}}{\underline{{{linkedin_display}}}} $|$
+    \href{{{github_url}}}{\underline{{{github_display}}}}
+\end{center}
+
+
+%-----------EDUCATION-----------
+\section{Education}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {{university_1}}{{{location_1}}}
+      {{degree_1}}{{{date_range_1}}}
+    \resumeSubheading
+      {{university_2}}{{{location_2}}}
+      {{degree_2}}{{{date_range_2}}}
+  \resumeSubHeadingListEnd
+
+
+%-----------EXPERIENCE-----------
+\section{Experience}
+  \resumeSubHeadingListStart
+
+    \resumeSubheading
+      {{job_title_1}}{{{job_date_1}}}
+      {{company_1}}{{{job_location_1}}}
+      \resumeItemListStart
+        \resumeItem{{job_1_responsibility_1}}
+        \resumeItem{{job_1_responsibility_2}}
+        \resumeItem{{job_1_responsibility_3}}
+      \resumeItemListEnd
+      
+    \resumeSubheading
+      {{job_title_2}}{{{job_date_2}}}
+      {{company_2}}{{{job_location_2}}}
+      \resumeItemListStart
+        \resumeItem{{job_2_responsibility_1}}
+        \resumeItem{{job_2_responsibility_2}}
+        \resumeItem{{job_2_responsibility_3}}
+    \resumeItemListEnd
+
+    \resumeSubheading
+      {{job_title_3}}{{{job_date_3}}}
+      {{company_3}}{{{job_location_3}}}
+      \resumeItemListStart
+        \resumeItem{{job_3_responsibility_1}}
+        \resumeItem{{job_3_responsibility_2}}
+        \resumeItem{{job_3_responsibility_3}}
+        \resumeItem{{job_3_responsibility_4}}
+        \resumeItem{{job_3_responsibility_5}}
+        \resumeItem{{job_3_responsibility_6}}
+      \resumeItemListEnd
+
+  \resumeSubHeadingListEnd
+
+
+%-----------PROJECTS-----------
+\section{Projects}
+    \resumeSubHeadingListStart
+      \resumeProjectHeading
+          {\textbf{{project_1_name}} $|$ \emph{{project_1_technologies}}}{{{project_1_date}}}
+          \resumeItemListStart
+            \resumeItem{{project_1_description_1}}
+            \resumeItem{{project_1_description_2}}
+            \resumeItem{{project_1_description_3}}
+            \resumeItem{{project_1_description_4}}
+          \resumeItemListEnd
+      \resumeProjectHeading
+          {\textbf{{project_2_name}} $|$ \emph{{project_2_technologies}}}{{{project_2_date}}}
+          \resumeItemListStart
+            \resumeItem{{project_2_description_1}}
+            \resumeItem{{project_2_description_2}}
+            \resumeItem{{project_2_description_3}}
+            \resumeItem{{project_2_description_4}}
+          \resumeItemListEnd
+    \resumeSubHeadingListEnd
+
+
+%-----------PROGRAMMING SKILLS-----------
+\section{Technical Skills}
+ \begin{itemize}[leftmargin=0.15in, label={}]
+    \small{\item{
+     \textbf{Languages}{: {{languages}}} \\
+     \textbf{Frameworks}{: {{frameworks}}} \\
+     \textbf{Developer Tools}{: {{developer_tools}}} \\
+     \textbf{Libraries}{: {{libraries}}}
+    }}
+ \end{itemize}
+
+
+%-------------------------------------------
+\end{document}

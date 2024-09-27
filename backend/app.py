@@ -6,231 +6,161 @@ from werkzeug.utils import secure_filename
 import PyPDF2
 from openai import OpenAI
 from flask_cors import CORS
+from dotenv import load_dotenv
+from queue import Queue
+from threading import Thread
 from resume_generator import generate_resume_pdf
 
-app = Flask(__name__)
+load_dotenv()
+
+app = Flask(__name__, static_folder='C:\\Users\\musa\\Desktop\\resumeai\\frontend\\dist')
 CORS(app)
-app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_FOLDER', '/tmp/uploads')
-app.config['OUTPUT_FOLDER'] = os.environ.get('OUTPUT_FOLDER', '/tmp/output')
+app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_FOLDER', 'C:\\Users\\musa\\Desktop\\resumeai\\backend\\uploads')
+app.config['OUTPUT_FOLDER'] = os.environ.get('OUTPUT_FOLDER', 'C:\\Users\\musa\\Desktop\\resumeai\\backend\\output')
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
 
 # Set your OpenAI API key
-client = OpenAI(
-    api_key=os.environ.get('OPENAI_API_KEY')
-)
+client = OpenAI()
 
-def extract_info_with_gpt(text):
-    prompt = r"""
-    Extract the relevant information from the given resume text and use it to populate the following LaTeX resume template. Replace the placeholders (enclosed in double curly braces) with the extracted information. Ensure that the LaTeX syntax remains valid.
+upload_queue = Queue()
+task_results = {}
 
-    \documentclass[11pt]{article}
-    \usepackage[a4paper, top=0.5in, bottom=0.5in, left=0.5in, right=0.5in]{geometry}
-    \usepackage{XCharter}
-    \usepackage[T1]{fontenc}
-    \usepackage[utf8]{inputenc}
-    \usepackage{enumitem}
-    \usepackage[hidelinks]{hyperref}
-    \usepackage{titlesec}
-    \raggedright
-    \pagestyle{empty}
+def process_queue():
+    while True:
+        task = upload_queue.get()
+        process_upload(task)
+        upload_queue.task_done()
 
-    \input{glyphtounicode}
-    \pdfgentounicode=1
+queue_thread = Thread(target=process_queue, daemon=True)
+queue_thread.start()
 
-    \titleformat{\section}{\bfseries\large}{}{0pt}{}[\vspace{1pt}\titlerule\vspace{-6.5pt}]
+def load_latex_template(template_id):
+    with open(f'./resumetemplates/{template_id}.tex', 'r') as file:
+        return file.read()
 
-    \renewcommand\labelitemi{$\vcenter{\hbox{\small$\bullet$}}$}
-    \setlist[itemize]{itemsep=-2pt, leftmargin=12pt}
-
-    \begin{document}
-
-    % NAME
-    \centerline{\Huge {{full_name}}}
-
-    \vspace{5pt}
-
-    % CONTACT INFORMATION (email, website, github, phone number, etc)
-    \centerline{\href{mailto:{{email}}}{{{email}}} | \href{{{website}}}{{{website_display}}} | \href{{{github}}}{{{github_display}}}}
-
-    \vspace{-10pt}
-
-    % SKILLS
-    \section*{Skills}
-    \textbf{Category} Skill 1, Skill 2, etc ...
-
-    \vspace{-10.5pt}
-
-    % EXPERIENCE
-    \section*{Experience}
-    {{#each work_experience}}
-    \textbf{{{position}},} {{{company}}} -- {{location}} \hfill {{start_date}} -- {{end_date}}
-    \vspace{-9pt}
-    \begin{itemize}
-        {{#each bullet_points}}
-        \item {{this}}
-        {{/each}}
-    \end{itemize}
-
-    {{/each}}
-
-    \vspace{-18.5pt}
-
-    % PROJECTS
-    \section*{Projects}
-    {{#each projects}}
-    \textbf{{{name}}} \hfill {{start_date}} -- {{end_date}
-    \vspace{-9pt}
-    \begin{itemize}
-        \item {{description}}
-        \item Technologies used: {{technologies}}
-        {{#each bullet_points}}
-        \item {{this}}
-        {{/each}}
-    \end{itemize}
-
-    {{/each}}
-
-    \vspace{-18.5pt}
-
-    % VOLUNTEERING
-    \section*{Volunteering}
-    {{#each volunteer_experience}}
-    \textbf{{{role}},} {{{organization}}} \hfill {{start_date}} -- {{end_date}}
-    \vspace{-9pt}
-    \begin{itemize}
-        {{#each bullet_points}}
-        \item {{this}}
-        {{/each}}
-    \end{itemize}
-
-    {{/each}}
-
-    \vspace{-18.5pt}
-
-    % EDUCATION
-    \section*{Education}
-    \textbf{{{school}}} -- {{program}} \hfill {{start_date}} -- {{graduation_date}}
-
-    \end{document}
-
-    Instructions:
-    1. Extract the following information from the resume if it is available:
-    - Full name
-    - Phone number
-    - Address
-    - Email address
-    - Website
-    - GitHub profile
-    - Skills (mostly one word skills, likely languages, tools, frameworks, etc)
-    - Work experience (including company, position, location, dates, and bullet points)
-    - Projects (including name, dates, description, technologies, and bullet points)
-    - Volunteer experience (including organization, role, dates, and bullet points)
-    - Education (including school, program, start date, and expected graduation date)
-
-    2. Replace the placeholders in the template with the extracted information.
-    3. For dates, use the format Month Year (Jan, Feb, Mar, Apr, May, June, July, Aug, Sept, Oct, Nov, Dec) if month is available, or Year if only year is available. Use 'Present' for current positions or ongoing projects.
-    4. Ensure that all LaTeX syntax remains valid, especially when filling in bullet points.
-    5. If any section is not present in the resume (e.g., no projects or volunteer experience), remove that entire section from the template.
-    6. Escape all hashtags and percentage signs with a \
-    7. Instead of using an emdash (which will cause an error), use 3 hyphens. e.g. "---"
-    8. Do NOT use these quotes: '. Whenever you need to use a quote, use this: '
-    9. Create sections as needed (e.g. research, etc)
-    10. Remove sections as needed (e.g. if there is no github link, don't create the divider for it)
-    11. Shorten long role names or teams. Use abbreviations like Dept. for department. 
-    12. You can update job position names 
-
-    Please provide the complete, filled-out LaTeX document as your response. Do NOT include ANY other text, this especially includes backticks (`) at the beginning and end, as well as the mention of 'latex' after the first backticks. I repeat, DO NOT includes (```latex at the beginning and ``` at the end of the message)
-
-    Resume text:
-    """ + text
-
+def convert_resume_to_latex(template_id, text):
+    latex_template = load_latex_template(template_id)
+    prompt = create_enhanced_prompt(text, latex_template)
+    
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-            {"role": "system", "content": "You are a helpful assistant that extracts information from resumes."},
+            {"role": "system", "content": "You are an expert at extracting information from resumes and converting them into compilable LaTeX documents. Follow the given instructions precisely and respond only with valid LaTeX."},
             {"role": "user", "content": prompt}
         ],
-        max_tokens=2500
+        max_tokens=2500,
+        temperature=0.1  # Even lower temperature for more consistent output
     )
-
+    
     return response.choices[0].message.content
 
-def validate_latex(latex_content):
-    prompt = f"""
-    Please validate and correct the following LaTeX content for a resume. Ensure it meets these specific criteria in addition to having correct LaTeX syntax:
-    2. Each experience header (position, company, location, date range) should be on a single line and less than 80 characters.
-    3. There should be no empty sections. Remove any section that doesn't have content.
-    11. Ensure there is the correct spacing between subsections (e.g. under Experience use vspace -9pt before the bullet point list)
+def create_enhanced_prompt(text, template):
+    return f"""
+    Convert the following resume text into a LaTeX document using the provided template. Replace placeholders ({{{{placeholder}}}}) with appropriate information.
 
-    LaTeX content to validate and correct:
+    Resume Processing Instructions:
+    1. Extract (ONLY IF AVAILABLE) and use: full name, phone number, location, address, email, website, GitHub, other social media links, summary, skills, work experience, projects, volunteer experience, education, and research.
+    2. For dates, use 'Month Year' format (e.g., Jan 2023) or just 'Year' if month is unavailable. Use 'Present' for current positions or ongoing projects.
+    3. For skills, focus on one-word or short-phrase items like languages, tools, frameworks, etc.
+    4. In work experience, include company, position, location, dates, and bullet points for responsibilities/achievements.
+    5. For projects, include name, dates, description, technologies used, and bullet points for key features or outcomes.
+    6. In education, include school, program, start date, and expected graduation date.
 
-    {latex_content}
+    LaTeX Formatting Instructions:
+    1. Remove any sections not present in the resume (e.g., if no projects or volunteer experience, remove that entire section).
+    2. Escape all hashtags (\\#) and percentage signs (\\%).
+    3. Use three hyphens (---) instead of an emdash.
+    4. Use single quotes (') instead of apostrophes (').
+    5. Shorten long role names or teams. Use abbreviations like 'Dept.' for department.
+    6. Update job position names for clarity if needed.
+    7. Do NOT include any Unicode or special characters or emojis.
+    8. Remove sections for any not present (e.g., if given text has no projects, don't create the Projects section)
+    9. Remove section dividers for any information not present (e.g., if no GitHub link, don't create the divider for it).
+    10. Maintain the order of sections as found in the template
 
-    Please provide ONLY the corrected LaTeX content that meets all these criteria. Do not provide any preamble or explanations. Do not begin with 'latex' or triple backticks or quotes.
+    LaTeX Template:
+    {template}
+
+    Resume Text:
+    {text}
+
+    Your response must contain ONLY the complete, filled-out LaTeX document. Do not include any explanatory text, code block delimiters (```), or the word "latex" at the beginning. The response should start with \documentclass.
     """
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": "You are a LaTeX expert specialized in resume formatting. Your task is to validate and correct LaTeX resume content to ensure it meets specific formatting criteria. You only respond with a complete LaTeX document."},
-            {"role": "user", "content": prompt}
-        ],
-        max_tokens=2500
-    )
+def process_upload(task):
+    filepath, filename, template_id, task_id = task['filepath'], task['filename'], task['templateId'], task['id']
+    try:
+        with open(filepath, 'rb') as pdf_file:
+            pdf_reader = PyPDF2.PdfReader(pdf_file)
+            text = ''.join(page.extract_text() for page in pdf_reader.pages)
+        
+        latex_content = convert_resume_to_latex(template_id, text)
 
-    # Extract the corrected LaTeX content and any explanations
-    full_response = response.choices[0].message.content
-    return full_response
+        output_filename = f"resume_{filename.rsplit('.', 1)[0]}_{uuid.uuid4().hex[:8]}"
+        output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)
+        
+        success = generate_resume_pdf(latex_content, output_path)
 
-@app.route('/upload', methods=['GET', 'POST'])
+        if success:
+            task_results[task_id] = {
+                "status": "completed",
+                "pdf_url": f"/pdf/{output_filename}.pdf",
+                "download_url": f"/download/{output_filename}.pdf"
+            }
+        else:
+            task_results[task_id] = {"status": "failed"}
+    except Exception as e:
+        print(f"Error processing task {task_id}: {str(e)}")
+        task_results[task_id] = {"status": "failed"}
+    finally:
+        os.remove(filepath)
+
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve(path):
+    if path != "" and os.path.exists(app.static_folder + '/' + path):
+        return send_from_directory(app.static_folder, path)
+    else:
+        return send_from_directory(app.static_folder, 'index.html')
+
+@app.route('/upload', methods=['POST'])
 def upload_file():
-    if request.method == 'POST':
-        if 'file' not in request.files:
-            return jsonify({"error": "No file part"}), 400
-        file = request.files['file']
-        if file.filename == '':
-            return jsonify({"error": "No selected file"}), 400
-        if file and file.filename.endswith('.pdf'):
-            filename = secure_filename(file.filename)
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(filepath)
-            
-            with open(filepath, 'rb') as pdf_file:
-                pdf_reader = PyPDF2.PdfReader(pdf_file)
-                text = ''
-                for page in pdf_reader.pages:
-                    text += page.extract_text()
-            
-            latex_content = extract_info_with_gpt(text)
-            
-            validated_latex_content = latex_content
-            print(validated_latex_content)
-            
-            os.remove(filepath)
-            
-            # Generate a unique identifier
-            unique_id = uuid.uuid4().hex[:8]
-            
-            # Create a unique filename for the output
-            output_filename = f"resume_{filename.rsplit('.', 1)[0]}_{unique_id}"
-            output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)
-            
-            success = generate_resume_pdf(validated_latex_content, output_path)
-            
-            if success:
-                return jsonify({
-                    "message": "Resume generated successfully",
-                    "pdf_url": f"/pdf/{output_filename}.pdf",
-                    "download_url": f"/download/{output_filename}.pdf"
-                })
-            else:
-                return jsonify({
-                    "error": "Failed to generate PDF. Please check the LaTeX syntax.",
-                }), 500
-    
-    return render_template('upload.html')
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part"}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+    if file and file.filename.endswith('.pdf'):
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
+        
+        task_id = uuid.uuid4().hex[:8]
+        task = {
+            "filepath": filepath,
+            "filename": filename,
+            "templateId": request.form['templateId'],
+            "id": task_id
+        }
+        print("adding task to queue")
+        upload_queue.put(task)
+        print("returning...")
+        return jsonify({
+            "message": "File added to queue",
+            "task_id": task_id
+        })
 
+@app.route('/task-status/<task_id>', methods=['GET'])
+def get_task_status(task_id):
+    result = task_results.get(task_id)
+    if result:
+        return jsonify(result)
+    elif task_id in [task['id'] for task in list(upload_queue.queue)]:
+        return jsonify({"status": "queued"})
+    else:
+        return jsonify({"status": "processing"})
+    
 @app.route('/pdf/<filename>')
 def serve_pdf(filename):
     return send_from_directory(app.config['OUTPUT_FOLDER'], filename, mimetype='application/pdf')
@@ -241,4 +171,4 @@ def download_file(filename):
                      as_attachment=True)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5000)

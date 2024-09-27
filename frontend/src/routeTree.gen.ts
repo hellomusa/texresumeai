@@ -11,18 +11,12 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as TemplatesoldImport } from './routes/templatesold'
 import { Route as TemplatesImport } from './routes/templates'
 import { Route as AboutImport } from './routes/about'
 import { Route as IndexImport } from './routes/index'
 import { Route as EditorTemplateIdImport } from './routes/editor.$templateId'
 
 // Create/Update Routes
-
-const TemplatesoldRoute = TemplatesoldImport.update({
-  path: '/templatesold',
-  getParentRoute: () => rootRoute,
-} as any)
 
 const TemplatesRoute = TemplatesImport.update({
   path: '/templates',
@@ -69,13 +63,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TemplatesImport
       parentRoute: typeof rootRoute
     }
-    '/templatesold': {
-      id: '/templatesold'
-      path: '/templatesold'
-      fullPath: '/templatesold'
-      preLoaderRoute: typeof TemplatesoldImport
-      parentRoute: typeof rootRoute
-    }
     '/editor/$templateId': {
       id: '/editor/$templateId'
       path: '/editor/$templateId'
@@ -92,7 +79,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/templates': typeof TemplatesRoute
-  '/templatesold': typeof TemplatesoldRoute
   '/editor/$templateId': typeof EditorTemplateIdRoute
 }
 
@@ -100,7 +86,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/templates': typeof TemplatesRoute
-  '/templatesold': typeof TemplatesoldRoute
   '/editor/$templateId': typeof EditorTemplateIdRoute
 }
 
@@ -109,27 +94,15 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/templates': typeof TemplatesRoute
-  '/templatesold': typeof TemplatesoldRoute
   '/editor/$templateId': typeof EditorTemplateIdRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/about'
-    | '/templates'
-    | '/templatesold'
-    | '/editor/$templateId'
+  fullPaths: '/' | '/about' | '/templates' | '/editor/$templateId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/templates' | '/templatesold' | '/editor/$templateId'
-  id:
-    | '__root__'
-    | '/'
-    | '/about'
-    | '/templates'
-    | '/templatesold'
-    | '/editor/$templateId'
+  to: '/' | '/about' | '/templates' | '/editor/$templateId'
+  id: '__root__' | '/' | '/about' | '/templates' | '/editor/$templateId'
   fileRoutesById: FileRoutesById
 }
 
@@ -137,7 +110,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   TemplatesRoute: typeof TemplatesRoute
-  TemplatesoldRoute: typeof TemplatesoldRoute
   EditorTemplateIdRoute: typeof EditorTemplateIdRoute
 }
 
@@ -145,7 +117,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   TemplatesRoute: TemplatesRoute,
-  TemplatesoldRoute: TemplatesoldRoute,
   EditorTemplateIdRoute: EditorTemplateIdRoute,
 }
 
@@ -164,7 +135,6 @@ export const routeTree = rootRoute
         "/",
         "/about",
         "/templates",
-        "/templatesold",
         "/editor/$templateId"
       ]
     },
@@ -176,9 +146,6 @@ export const routeTree = rootRoute
     },
     "/templates": {
       "filePath": "templates.tsx"
-    },
-    "/templatesold": {
-      "filePath": "templatesold.tsx"
     },
     "/editor/$templateId": {
       "filePath": "editor.$templateId.tsx"

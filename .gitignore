@@ -53,3 +53,6 @@ Thumbs.db
 
 # Git ignores itself
 .git
+
+backend/output
+backend/uploads

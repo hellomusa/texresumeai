@@ -3,4 +3,8 @@ export interface Template {
   name: string;
   description: string;
   image: string;
+  category: string;
+  rating: number;
+  views: number;
+  downloads: number;
 }

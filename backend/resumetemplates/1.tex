@@ -1,0 +1,89 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper, top=0.5in, bottom=0.5in, left=0.5in, right=0.5in]{geometry}
+\usepackage{XCharter}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{titlesec}
+\raggedright
+\pagestyle{empty}
+
+\input{glyphtounicode}
+\pdfgentounicode=1
+
+\titleformat{\section}{\bfseries\large}{}{0pt}{}[\vspace{1pt}\titlerule\vspace{-6.5pt}]
+
+\renewcommand\labelitemi{$\vcenter{\hbox{\small$\bullet$}}$}
+\setlist[itemize]{itemsep=-2pt, leftmargin=12pt}
+
+\begin{document}
+
+% NAME
+\centerline{\Huge {{full_name}}}
+
+\vspace{5pt}
+
+% CONTACT INFORMATION (email, website, github, phone number, etc)
+\centerline{\href{mailto:{{email}}}{{{email}}} | \href{{{contact_method_1}}}{{{contact_method_1}}} }\href{{{contact_method_2}}}{{{contact_method_2}}}
+
+\vspace{-10pt}
+
+% SKILLS
+\section*{Skills}
+\textbf{Category} Skill 1, Skill 2, etc ...
+
+\vspace{-10.5pt}
+
+% EXPERIENCE
+\section*{Experience}
+{{#each work_experience}}
+\textbf{{{position}},} {{{company}}} --- {{location}} \hfill {{start_date}} --- {{end_date}}
+\vspace{-9pt}
+\begin{itemize}
+    {{#each bullet_points}}
+    \item {{this}}
+    {{/each}}
+\end{itemize}
+
+{{/each}}
+
+\vspace{-18.5pt}
+
+% PROJECTS
+\section*{Projects}
+{{#each projects}}
+\textbf{{{name}}} \hfill {{start_date}} --- {{end_date}}
+\vspace{-9pt}
+\begin{itemize}
+    \item {{description}}
+    \item Technologies used: {{technologies}}
+    {{#each bullet_points}}
+    \item {{this}}
+    {{/each}}
+\end{itemize}
+
+{{/each}}
+
+\vspace{-18.5pt}
+
+% VOLUNTEERING
+\section*{Volunteering}
+{{#each volunteer_experience}}
+\textbf{{{role}},} {{{organization}}} \hfill {{start_date}} --- {{end_date}}
+\vspace{-9pt}
+\begin{itemize}
+    {{#each bullet_points}}
+    \item {{this}}
+    {{/each}}
+\end{itemize}
+
+{{/each}}
+
+\vspace{-18.5pt}
+
+% EDUCATION
+\section*{Education}
+\textbf{{{school}}} --- {{program}} \hfill {{start_date}} --- {{graduation_date}}
+
+\end{document}

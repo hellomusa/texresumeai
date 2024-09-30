@@ -3,7 +3,7 @@ import { Upload, Check, AlertCircle, Loader2, FileText } from 'lucide-react'
 
 interface ResumeUploaderProps {
   templateId: string;
-  onUploadComplete: (pdfUrl: string, downloadUrl: string) => void;
+  onUploadComplete: (pdfUrl: string, downloadUrl: string, taskId: string) => void;
 }
 
 const API_BASE_URL = import.meta.env.VITE_REACT_APP_API_URL || 'http://localhost:5000';
@@ -75,7 +75,7 @@ export default function ResumeUploader({ templateId, onUploadComplete }: ResumeU
             if (pollIntervalRef.current) {
               clearInterval(pollIntervalRef.current)
             }
-            onUploadComplete(data.pdf_url, data.download_url)
+            onUploadComplete(data.pdf_url, data.download_url, taskId)
             break
           case 'failed':
             setIsUploading(false)

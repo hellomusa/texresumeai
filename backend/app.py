@@ -1,3 +1,4 @@
+import json
 import os
 import re
 import uuid
@@ -10,6 +11,39 @@ from dotenv import load_dotenv
 from queue import Queue
 from threading import Thread
 from resume_generator import generate_resume_pdf
+
+from pydantic import BaseModel
+from typing import List, Optional
+from datetime import date
+
+class ResumeData(BaseModel):
+    class ContactInfo(BaseModel):
+        email: str
+        phone: str
+        location: str
+        linkedin: Optional[str] = None
+        github: Optional[str] = None
+        personal_website: Optional[str] = None
+        other: Optional[str] = None
+
+    class WorkExperience(BaseModel):
+        company: str
+        position: str
+        start_date: str
+        end_date: Optional[str] = None
+        bullet_points: List[str]
+
+    class Education(BaseModel):
+        school: str
+        degree: str
+        start_date: str
+        end_date: Optional[str] = None
+
+    full_name: str
+    contact_info: ContactInfo
+    work_experience: List[WorkExperience]
+    education: List[Education]
+    skills: Optional[List[str]] = None
 
 load_dotenv()
 
@@ -160,7 +194,43 @@ def get_task_status(task_id):
         return jsonify({"status": "queued"})
     else:
         return jsonify({"status": "processing"})
+
+@app.route('/extract-resume', methods=['POST'])
+def extract_resume():
+    task_id = request.json.get('taskId')
+    result = task_results.get(task_id)
+    if not result or result['status'] != 'completed':
+        return jsonify({"error": "Invalid task or task not completed"}), 400
+
+    pdf_filename = result['pdf_url'].split('/')[-1]
+    pdf_path = os.path.join(app.config['OUTPUT_FOLDER'], pdf_filename)
+
+    with open(pdf_path, 'rb') as pdf_file:
+        pdf_reader = PyPDF2.PdfReader(pdf_file)
+        text = ''.join(page.extract_text() for page in pdf_reader.pages)
+
+    # Use GPT-4 to extract structured data from the resume text
+    prompt = f"""
+    Extract information from this resume following the JSON schema provided.
     
+    Format dates using Month Year. Use Present for current.
+
+    Resume Text:
+    {text}
+    """
+
+    response = client.beta.chat.completions.parse(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": "You are an expert at structured data extraction. You will be given unstructured text from a resume and should convert it into the given structure."},
+            {"role": "user", "content": prompt}
+        ],
+        response_format=ResumeData
+    )
+    print(response.choices[0].message.content)
+    extracted_data = json.loads(response.choices[0].message.content)
+    return jsonify(extracted_data)
+
 @app.route('/pdf/<filename>')
 def serve_pdf(filename):
     return send_from_directory(app.config['OUTPUT_FOLDER'], filename, mimetype='application/pdf')

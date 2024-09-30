@@ -9,6 +9,7 @@ import { InfoTooltip } from '../components/Editor/info-tooltip'
 import { ManualEditSection } from '../components/Editor/manual-edit-section'
 import { ResumePreview } from '../components/Editor/resume-preview'
 import { DownloadButton } from '../components/Editor/download-button'
+import { ResumeData } from '../types/ResumeData'
 
 const API_BASE_URL = import.meta.env.VITE_REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -26,16 +27,67 @@ function Editor() {
   const template = useLoaderData({ from: '/editor/$templateId' })
   const [generatedPdfUrl, setGeneratedPdfUrl] = useState<string | null>(null)
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null)
+
+  const [resumeData, setResumeData] = useState<ResumeData>({
+    full_name: '',
+    contact_info: {
+      email: '',
+      phone: '',
+      location: '',
+      linkedin: '',
+      github: '',
+      personal_website: '',
+      other: '',
+    },
+    work_experience: [],
+    education: [],
+    skills: [],
+  });
+  
+  const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
+
   const navigate = useNavigate()
 
   const handleTemplateChange = (newTemplateId: string) => {
     navigate({ to: '/editor/$templateId', params: { templateId: newTemplateId } })
   }
+  const handleUploadComplete = (pdfUrl: string, downloadUrl: string, taskId: string) => {
+    setGeneratedPdfUrl(pdfUrl);
+    setDownloadUrl(downloadUrl);
+    setCurrentTaskId(taskId);
 
-  const handleUploadComplete = (pdfUrl: string, downloadUrl: string) => {
-    setGeneratedPdfUrl(pdfUrl)
-    setDownloadUrl(downloadUrl)
-  }
+    // Extract resume data
+    fetch(`${API_BASE_URL}/extract-resume`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ taskId })
+    })
+      .then(response => response.json())
+      .then(data => {
+        console.log(data);
+        setResumeData({
+          full_name: data.full_name || '',
+          contact_info: {
+            email: data.contact_info?.email || '',
+            phone: data.contact_info?.phone || '',
+            location: data.contact_info?.location || '',
+            linkedin: data.contact_info?.linkedin || '',
+            github: data.contact_info?.github || '',
+            personal_website: data.contact_info?.personal_website || '',
+            other: data.contact_info?.other || '',
+          },
+          work_experience: data.work_experience || [],
+          education: data.education || [],
+          skills: data.skills || [],
+        });
+      })
+      .catch(error => console.error('Error extracting resume data:', error));
+  };
+
+  const handleSaveResumeData = (updatedData: ResumeData) => {
+    setResumeData(updatedData);
+    // Here you can also add logic to send the updated data to your backend if needed
+  };
 
   if (!template) {
     return (
@@ -67,7 +119,9 @@ function Editor() {
                   onTemplateChange={handleTemplateChange}
                 />
                 <ResumeUploader templateId={template.id} onUploadComplete={handleUploadComplete} />
-                <ManualEditSection />
+                {resumeData && (
+                  <ManualEditSection resumeData={resumeData} onSave={handleSaveResumeData} />
+                )}
               </div>
             </motion.div>
 

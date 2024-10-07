@@ -47,10 +47,19 @@ class ResumeData(BaseModel):
 
 load_dotenv()
 
-app = Flask(__name__, static_folder='C:\\Users\\musa\\Desktop\\resumeai\\frontend\\dist')
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
+# Define paths relative to the base directory
+FRONTEND_DIR = os.path.join(BASE_DIR, '..', 'frontend', 'dist')
+UPLOAD_DIR = os.path.join(BASE_DIR, 'uploads')
+OUTPUT_DIR = os.path.join(BASE_DIR, 'output')
+
+app = Flask(__name__, static_folder=FRONTEND_DIR)
 CORS(app)
-app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_FOLDER', 'C:\\Users\\musa\\Desktop\\resumeai\\backend\\uploads')
-app.config['OUTPUT_FOLDER'] = os.environ.get('OUTPUT_FOLDER', 'C:\\Users\\musa\\Desktop\\resumeai\\backend\\output')
+
+app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_FOLDER', UPLOAD_DIR)
+app.config['OUTPUT_FOLDER'] = os.environ.get('OUTPUT_FOLDER', OUTPUT_DIR)
+
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['OUTPUT_FOLDER'], exist_ok=True)
 
